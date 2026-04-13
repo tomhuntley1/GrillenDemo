@@ -1,0 +1,9 @@
+# =============================================================================
+# Rename this file to terraform.tfvars and fill in your values.
+# NEVER commit terraform.tfvars to Git — it contains your password.
+# =============================================================================
+
+location           = "uksouth"
+sql_admin_username = "northroute_admin"
+sql_admin_password = "YourPasswordHere123!"   # 8+ chars, upper, lower, number, symbol
+my_ip_address      = "0.0.0.0"                # your IP from https://whatismyip.com

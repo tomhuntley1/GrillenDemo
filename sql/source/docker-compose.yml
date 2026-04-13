@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: northroute_postgres
+    environment:
+      POSTGRES_USER: demo_user
+      POSTGRES_PASSWORD: Demo1234!
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./01_postgres_setup.sql:/docker-entrypoint-initdb.d/01_postgres_setup.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+# Connection details for ADF linked service:
+#   Host:     your laptop's local network IP (NOT localhost)
+#   Port:     5432
+#   Database: northroute_erp
+#   Username: demo_user
+#   Password: Demo1234!

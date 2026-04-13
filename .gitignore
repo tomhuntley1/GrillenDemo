@@ -1,0 +1,29 @@
+# Terraform
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/terraform.tfvars
+**/tfplan
+**/crash.log
+**/*.tfplan
+
+# Docker / data volumes
+sql/source/data/
+sql/source/**/*.mdf
+sql/source/**/*.ldf
+
+# OS / editor
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Secrets / env
+.env
+*.secrets
+
+# Claude Code workspace
+.claude/
