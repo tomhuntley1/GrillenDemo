@@ -22,7 +22,7 @@ BEGIN
         DBCC CHECKIDENT ('gld.fact_delivery', RESEED, 0) WITH NO_INFOMSGS;
 
         -- Now safe to clear dimensions
-        TRUNCATE TABLE gld.dim_date;
+        delete from gld.dim_date;
 
         DELETE FROM gld.dim_warehouse;
         DBCC CHECKIDENT ('gld.dim_warehouse', RESEED, 0) WITH NO_INFOMSGS;
