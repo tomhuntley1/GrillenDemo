@@ -1,11 +1,6 @@
 -- =============================================================================
--- usp_slv_to_gld — Silver → Gold
--- Builds the star schema from clean Silver data.
---
---   gld.dim_date      — full year calendar dimension via recursive CTE
---   gld.dim_warehouse — one row per depot
---   gld.dim_customer  — one row per customer
---   gld.fact_delivery — one row per delivered order, FK to all dims
+-- usp_slv_to_gld — Silver → Gold (FIXED: handles FK constraints correctly)
+-- Deletes fact first before clearing dimensions, avoids TRUNCATE FK errors
 -- =============================================================================
 
 IF OBJECT_ID('dbo.usp_slv_to_gld','P') IS NOT NULL DROP PROCEDURE dbo.usp_slv_to_gld;
@@ -22,9 +17,20 @@ BEGIN
 
     BEGIN TRY
 
-        -- ── dim_date — full year calendar via recursive CTE ──────────────
+        -- Clear fact FIRST (it has FKs pointing to dims)
+        DELETE FROM gld.fact_delivery;
+        DBCC CHECKIDENT ('gld.fact_delivery', RESEED, 0) WITH NO_INFOMSGS;
+
+        -- Now safe to clear dimensions
         TRUNCATE TABLE gld.dim_date;
 
+        DELETE FROM gld.dim_warehouse;
+        DBCC CHECKIDENT ('gld.dim_warehouse', RESEED, 0) WITH NO_INFOMSGS;
+
+        DELETE FROM gld.dim_customer;
+        DBCC CHECKIDENT ('gld.dim_customer', RESEED, 0) WITH NO_INFOMSGS;
+
+        -- dim_date — full year calendar via recursive CTE
         ;WITH date_spine AS (
             SELECT CAST('2024-01-01' AS DATE) AS d
             UNION ALL
@@ -46,32 +52,25 @@ BEGIN
         FROM date_spine
         OPTION (MAXRECURSION 400);
 
-        -- ── dim_warehouse ─────────────────────────────────────────────────
-        TRUNCATE TABLE gld.dim_warehouse;
-        DBCC CHECKIDENT ('gld.dim_warehouse', RESEED, 0) WITH NO_INFOMSGS;
+        -- dim_warehouse
         INSERT INTO gld.dim_warehouse (warehouse_id, warehouse_name, city, region, capacity_tonnes)
         SELECT warehouse_id, warehouse_name, city, region, capacity_tonnes
         FROM slv.warehouses ORDER BY warehouse_id;
 
-        -- ── dim_customer ──────────────────────────────────────────────────
-        TRUNCATE TABLE gld.dim_customer;
-        DBCC CHECKIDENT ('gld.dim_customer', RESEED, 0) WITH NO_INFOMSGS;
+        -- dim_customer
         INSERT INTO gld.dim_customer (customer_id, company_name, contact_name, city, account_status)
         SELECT customer_id, company_name, contact_name, city, account_status
         FROM slv.customers ORDER BY customer_id;
 
-        -- ── fact_delivery ─────────────────────────────────────────────────
-        TRUNCATE TABLE gld.fact_delivery;
-        DBCC CHECKIDENT ('gld.fact_delivery', RESEED, 0) WITH NO_INFOMSGS;
-
+        -- fact_delivery
         INSERT INTO gld.fact_delivery (
             order_date_key, delivery_date_key, warehouse_key, customer_key,
             doc_entry, product_category, quantity_tonnes, unit_price_gbp, revenue_gbp,
             dq_was_duplicate, dq_tonnage_was_null, dq_tonnage_was_negative)
         SELECT
-            CAST(FORMAT(d.order_date,    'yyyyMMdd') AS INT),
+            CAST(FORMAT(d.order_date,'yyyyMMdd') AS INT),
             CASE WHEN d.delivery_date IS NULL THEN NULL
-                 ELSE CAST(FORMAT(d.delivery_date, 'yyyyMMdd') AS INT) END,
+                 ELSE CAST(FORMAT(d.delivery_date,'yyyyMMdd') AS INT) END,
             w.warehouse_key,
             c.customer_key,
             d.doc_entry, d.product_category, d.quantity_tonnes,
@@ -84,13 +83,12 @@ BEGIN
 
         SELECT @rows_out = COUNT(*) FROM gld.fact_delivery;
 
-        -- Log
         INSERT INTO dbo.pipeline_log (pipeline_name, run_id, stage, status, rows_processed, message, completed_at)
         VALUES ('pl_northroute_elt', @pipeline_run_id, 'GOLD', 'SUCCESS', @rows_out,
             CONCAT('fact_delivery rows: ', @rows_out,
-                   ' | dim_date: ', (SELECT COUNT(*) FROM gld.dim_date),
+                   ' | dim_date: ',      (SELECT COUNT(*) FROM gld.dim_date),
                    ' | dim_warehouse: ', (SELECT COUNT(*) FROM gld.dim_warehouse),
-                   ' | dim_customer: ', (SELECT COUNT(*) FROM gld.dim_customer)),
+                   ' | dim_customer: ',  (SELECT COUNT(*) FROM gld.dim_customer)),
             SYSUTCDATETIME());
 
         PRINT '=== Silver → Gold Complete ===';
@@ -106,5 +104,5 @@ BEGIN
 END;
 GO
 
-PRINT 'usp_slv_to_gld created successfully.';
+PRINT 'usp_slv_to_gld created successfully (FK-safe version).';
 GO
