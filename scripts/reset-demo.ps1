@@ -1,19 +1,21 @@
 # =============================================================================
 # reset-demo.ps1 - Full demo reset
 # Usage: .\scripts\reset-demo.ps1  (run from demo_v2 root, as Administrator)
+# Prompts for passwords at runtime - nothing sensitive stored in this file.
 # =============================================================================
 
-# ── CONFIGURE THESE ───────────────────────────────────────────────────────────
-$SQL_SERVER   = "sql-northroute-47xop2.database.windows.net"
-$SQL_DB       = "northroute-demo"
-$SQL_USER     = "northroute_admin"
-$SQL_PASSWORD = "YourPasswordHere123!"
+# ── NON-SENSITIVE CONFIG (safe to commit) ────────────────────────────────────
+$SQL_SERVER  = "sql-northroute-47xop2.database.windows.net"
+$SQL_DB      = "northroute-demo"
+$SQL_USER    = "northroute_admin"
+$PG_BIN      = "C:\Program Files\PostgreSQL\18\bin"
+$PG_USER     = "demo_user"
+$SCRIPT_ROOT = "C:\Users\Tom\demo_v2\sql"
 
-$PG_BIN       = "C:\Program Files\PostgreSQL\18\bin"
-$PG_USER      = "demo_user"
-$PG_PASSWORD  = "Demo1234!"
+# ── PROMPT FOR PASSWORDS ──────────────────────────────────────────────────────
+$SQL_PASSWORD = Read-Host "Enter Azure SQL password"
+$PG_PASSWORD  = Read-Host "Enter Postgres demo_user password (Demo1234!)"
 
-$SCRIPT_ROOT  = "C:\Users\Tom\demo_v2\sql"
 # =============================================================================
 
 function Write-Step { param($msg) Write-Host "`n>> $msg" -ForegroundColor Cyan }
