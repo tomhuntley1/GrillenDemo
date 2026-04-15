@@ -4,9 +4,9 @@
 -- Creates brz, slv, gld schemas + all tables + pipeline_log.
 -- =============================================================================
 
-IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'brz') EXEC('CREATE SCHEMA brz'); GO
-IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'slv') EXEC('CREATE SCHEMA slv'); GO
-IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gld') EXEC('CREATE SCHEMA gld'); GO
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'brz') EXEC('CREATE SCHEMA brz');
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'slv') EXEC('CREATE SCHEMA slv');
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gld') EXEC('CREATE SCHEMA gld');
 
 -- =============================================================================
 -- BRONZE â€” exact replica of source, no transformation whatsoever
