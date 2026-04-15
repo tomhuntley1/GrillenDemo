@@ -1,5 +1,5 @@
--- =============================================================================
--- NorthRoute Logistics — Azure SQL Setup
+﻿-- =============================================================================
+-- NorthRoute Logistics â€” Azure SQL Setup
 -- Run this first against your Azure SQL DB.
 -- Creates brz, slv, gld schemas + all tables + pipeline_log.
 -- =============================================================================
@@ -9,7 +9,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'slv') EXEC('CREATE SCHEMA
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'gld') EXEC('CREATE SCHEMA gld'); GO
 
 -- =============================================================================
--- BRONZE — exact replica of source, no transformation whatsoever
+-- BRONZE â€” exact replica of source, no transformation whatsoever
 -- =============================================================================
 IF OBJECT_ID('brz.warehouses','U')      IS NOT NULL DROP TABLE brz.warehouses;
 IF OBJECT_ID('brz.customers','U')       IS NOT NULL DROP TABLE brz.customers;
@@ -36,7 +36,7 @@ CREATE TABLE brz.delivery_orders (
 );
 
 -- =============================================================================
--- SILVER — business rules applied, deduped, DQ flagged
+-- SILVER â€” business rules applied, deduped, DQ flagged
 -- =============================================================================
 IF OBJECT_ID('slv.warehouses','U')      IS NOT NULL DROP TABLE slv.warehouses;
 IF OBJECT_ID('slv.customers','U')       IS NOT NULL DROP TABLE slv.customers;
@@ -77,7 +77,7 @@ CREATE TABLE slv.delivery_orders (
 );
 
 -- =============================================================================
--- GOLD — star schema, ready to query
+-- GOLD â€” star schema, ready to query
 -- =============================================================================
 IF OBJECT_ID('gld.fact_delivery','U')  IS NOT NULL DROP TABLE gld.fact_delivery;
 IF OBJECT_ID('gld.dim_customer','U')   IS NOT NULL DROP TABLE gld.dim_customer;
@@ -128,7 +128,7 @@ CREATE TABLE gld.fact_delivery (
 );
 
 -- =============================================================================
--- PIPELINE LOG — every run writes here
+-- PIPELINE LOG â€” every run writes here
 -- =============================================================================
 IF OBJECT_ID('dbo.pipeline_log','U') IS NOT NULL DROP TABLE dbo.pipeline_log;
 CREATE TABLE dbo.pipeline_log (
@@ -139,7 +139,5 @@ CREATE TABLE dbo.pipeline_log (
     started_at      DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(), completed_at DATETIME2,
     CONSTRAINT PK_pipeline_log PRIMARY KEY (log_id)
 );
-GO
 
-PRINT 'Setup complete — brz(3), slv(3), gld(4), dbo.pipeline_log';
-GO
+PRINT 'Setup complete â€” brz(3), slv(3), gld(4), dbo.pipeline_log';
