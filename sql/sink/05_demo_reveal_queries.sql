@@ -14,12 +14,12 @@ FROM brz.delivery_orders
 ORDER BY order_id;
 
 -- 1b. Data quality summary — the "look at this mess" moment
-SELECT 'Total rows in Bronze'       AS issue, COUNT(*)::TEXT AS count FROM brz.delivery_orders
-UNION ALL SELECT 'Duplicate doc_entries',   COUNT(*)::TEXT FROM (SELECT doc_entry FROM brz.delivery_orders GROUP BY doc_entry HAVING COUNT(*) > 1) d
-UNION ALL SELECT 'CANCELLED orders',        COUNT(*)::TEXT FROM brz.delivery_orders WHERE UPPER(status) = 'CANCELLED'
-UNION ALL SELECT 'NULL tonnage',            COUNT(*)::TEXT FROM brz.delivery_orders WHERE quantity_tonnes IS NULL
-UNION ALL SELECT 'Negative tonnage',        COUNT(*)::TEXT FROM brz.delivery_orders WHERE quantity_tonnes < 0
-UNION ALL SELECT 'Inconsistent status',     COUNT(*)::TEXT FROM brz.delivery_orders WHERE status != UPPER(status);
+SELECT 'Total rows in Bronze'       AS issue, CAST(COUNT(*) AS NVARCHAR) AS count FROM brz.delivery_orders
+UNION ALL SELECT 'Duplicate doc_entries',   CAST(COUNT(*) AS NVARCHAR) FROM (SELECT doc_entry FROM brz.delivery_orders GROUP BY doc_entry HAVING COUNT(*) > 1) d
+UNION ALL SELECT 'CANCELLED orders',        CAST(COUNT(*) AS NVARCHAR) FROM brz.delivery_orders WHERE UPPER(status) = 'CANCELLED'
+UNION ALL SELECT 'NULL tonnage',            CAST(COUNT(*) AS NVARCHAR) FROM brz.delivery_orders WHERE quantity_tonnes IS NULL
+UNION ALL SELECT 'Negative tonnage',        CAST(COUNT(*) AS NVARCHAR) FROM brz.delivery_orders WHERE quantity_tonnes < 0
+UNION ALL SELECT 'Inconsistent status',     CAST(COUNT(*) AS NVARCHAR) FROM brz.delivery_orders WHERE status != UPPER(status);
 
 -- 1c. Show a specific duplicate side by side
 SELECT order_id, doc_entry, order_date, quantity_tonnes, status, notes
