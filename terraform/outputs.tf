@@ -14,12 +14,22 @@ output "sql_admin_username" {
   value = var.sql_admin_username
 }
 
-output "adf_name" {
-  value = azurerm_data_factory.demo.name
+output "adf_backup_name" {
+  description = "Backup ADF (complete, working — never touch on demo day)"
+  value       = azurerm_data_factory.demo.name
 }
 
-output "adf_studio_url" {
+output "adf_backup_url" {
   value = "https://adf.azure.com/en/authoring/${azurerm_data_factory.demo.name}?factory=%2Fsubscriptions%2F${data.azurerm_client_config.current.subscription_id}%2FresourceGroups%2F${azurerm_resource_group.demo.name}%2Fproviders%2FMicrosoft.DataFactory%2Ffactories%2F${azurerm_data_factory.demo.name}"
+}
+
+output "adf_live_name" {
+  description = "Live demo ADF — this is what you build in front of the audience"
+  value       = azurerm_data_factory.demo_live.name
+}
+
+output "adf_live_url" {
+  value = "https://adf.azure.com/en/authoring/${azurerm_data_factory.demo_live.name}?factory=%2Fsubscriptions%2F${data.azurerm_client_config.current.subscription_id}%2FresourceGroups%2F${azurerm_resource_group.demo.name}%2Fproviders%2FMicrosoft.DataFactory%2Ffactories%2F${azurerm_data_factory.demo_live.name}"
 }
 
 output "key_vault_name" {

@@ -71,14 +71,6 @@ resource "azurerm_key_vault_access_policy" "current_user" {
   secret_permissions = ["Get", "List", "Set", "Delete", "Purge", "Recover"]
 }
 
-resource "azurerm_key_vault_access_policy" "adf" {
-  key_vault_id = azurerm_key_vault.demo.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_data_factory.demo.identity[0].principal_id
-  secret_permissions = ["Get", "List"]
-  depends_on   = [azurerm_data_factory.demo]
-}
-
 resource "azurerm_key_vault_secret" "sql_password" {
   name         = "sqlserver-admin-password"
   value        = var.sql_admin_password
@@ -118,25 +110,60 @@ resource "azurerm_mssql_database" "demo" {
   name      = "northroute-demo"
   server_id = azurerm_mssql_server.demo.id
   collation = "SQL_Latin1_General_CP1_CI_AS"
-  sku_name  = "S2"
+  sku_name  = "Basic"
   tags      = azurerm_resource_group.demo.tags
 }
 
 # =============================================================================
-# AZURE DATA FACTORY
+# AZURE DATA FACTORY — BACKUP (complete, never touched on demo day)
 # =============================================================================
 resource "azurerm_data_factory" "demo" {
   name                = "adf-${local.base_name}"
   location            = azurerm_resource_group.demo.location
   resource_group_name = azurerm_resource_group.demo.name
   identity { type = "SystemAssigned" }
-  tags                = azurerm_resource_group.demo.tags
+  tags                = merge(azurerm_resource_group.demo.tags, { role = "backup-complete" })
 }
 
 resource "azurerm_role_assignment" "adf_sql_contributor" {
   scope                = azurerm_mssql_server.demo.id
   role_definition_name = "Contributor"
   principal_id         = azurerm_data_factory.demo.identity[0].principal_id
+}
+
+resource "azurerm_key_vault_access_policy" "adf" {
+  key_vault_id = azurerm_key_vault.demo.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_data_factory.demo.identity[0].principal_id
+  secret_permissions = ["Get", "List"]
+  depends_on   = [azurerm_data_factory.demo]
+}
+
+# =============================================================================
+# AZURE DATA FACTORY — LIVE DEMO (what you build with the audience)
+# Pre-populated with: ls_azuresql, ls_keyvault, ds_azuresql_sink, backup pipeline
+# You build live:     ls_postgres, ds_postgres_source, pl_northroute_elt_DEMO
+# =============================================================================
+resource "azurerm_data_factory" "demo_live" {
+  name                = "adf-${local.base_name}-live"
+  location            = azurerm_resource_group.demo.location
+  resource_group_name = azurerm_resource_group.demo.name
+  identity { type = "SystemAssigned" }
+  tags                = merge(azurerm_resource_group.demo.tags, { role = "live-demo-build" })
+}
+
+resource "azurerm_role_assignment" "adf_live_sql_contributor" {
+  scope                = azurerm_mssql_server.demo.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_data_factory.demo_live.identity[0].principal_id
+}
+
+resource "azurerm_key_vault_access_policy" "adf_live" {
+  key_vault_id = azurerm_key_vault.demo.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_data_factory.demo_live.identity[0].principal_id
+  secret_permissions = ["Get", "List"]
+  depends_on   = [azurerm_data_factory.demo_live]
 }
 
 # =============================================================================
