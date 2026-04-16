@@ -110,7 +110,7 @@ resource "azurerm_mssql_database" "demo" {
   name      = "northroute-demo"
   server_id = azurerm_mssql_server.demo.id
   collation = "SQL_Latin1_General_CP1_CI_AS"
-  sku_name  = "Basic"
+  sku_name  = "S2"
   tags      = azurerm_resource_group.demo.tags
 }
 
