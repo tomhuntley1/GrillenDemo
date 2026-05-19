@@ -1,0 +1,119 @@
+{
+    "name": "2",
+    "properties": {
+        "activities": [
+            {
+                "name": "Lookup_ControlTable",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "AzureSqlSource",
+                        "sqlReaderQuery": "SELECT source_schema, source_table, sink_schema, sink_table\nFROM dbo.pipeline_control\nWHERE is_active = 1\nORDER BY load_order",
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "ds_azuresql_sink",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "schema_name": "dbo",
+                            "table_name": "pipeline_control"
+                        }
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "ForEach1",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Lookup_ControlTable",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Lookup_ControlTable').output.value",
+                        "type": "Expression"
+                    },
+                    "activities": [
+                        {
+                            "name": "Copy data1",
+                            "type": "Copy",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "source": {
+                                    "type": "PostgreSqlV2Source",
+                                    "queryTimeout": "02:00:00"
+                                },
+                                "sink": {
+                                    "type": "AzureSqlSink",
+                                    "preCopyScript": {
+                                        "value": "TRUNCATE TABLE [@{item().sink_schema}].[@{item().sink_table}]",
+                                        "type": "Expression"
+                                    },
+                                    "writeBehavior": "insert",
+                                    "sqlWriterUseTableLock": false,
+                                    "disableMetricsCollection": false
+                                },
+                                "enableStaging": false,
+                                "translator": {
+                                    "type": "TabularTranslator",
+                                    "typeConversion": true,
+                                    "typeConversionSettings": {
+                                        "allowDataTruncation": true,
+                                        "treatBooleanAsNumber": false
+                                    }
+                                }
+                            },
+                            "inputs": [
+                                {
+                                    "referenceName": "ds_postgres_source",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "schema_name": "@item().source_schema",
+                                        "table_name": "@item().source_table"
+                                    }
+                                }
+                            ],
+                            "outputs": [
+                                {
+                                    "referenceName": "ds_azuresql_sink",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "schema_name": "@item().sink_schema",
+                                        "table_name": "@item().sink_table"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2026-05-13T19:28:02Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
