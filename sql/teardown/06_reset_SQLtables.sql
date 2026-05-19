@@ -1,3 +1,5 @@
+
+
 -- Clear all data, keep structure and stored procs
 DELETE FROM gld.fact_delivery;
 DELETE FROM gld.dim_customer;
