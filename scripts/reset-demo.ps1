@@ -4,7 +4,7 @@
 $SQL_SERVER  = "sql-northroute-47xop2.database.windows.net"
 $SQL_DB      = "northroute-demo"
 $SQL_USER    = "northroute_admin"
-$SCRIPT_ROOT = "D:\Projects\Grilllen\demo_v2\sql"
+$SCRIPT_ROOT = Join-Path $PSScriptRoot "..\sql"
 
 $SQL_PASSWORD = Read-Host "Enter Azure SQL password"
 
@@ -26,7 +26,7 @@ Write-Host "   NorthRoute Demo - Full Reset            " -ForegroundColor Yellow
 Write-Host "============================================" -ForegroundColor Yellow
 
 Write-Step "Tearing down Azure SQL"
-Invoke-SqlScript "$SCRIPT_ROOT\teardown\06_teardown_azuresql.sql" "Teardown"
+Invoke-SqlScript "$SCRIPT_ROOT\teardown\06_reset_SQLtables.sql" "Teardown"
 
 Write-Step "Rebuilding Azure SQL"
 Invoke-SqlScript "$SCRIPT_ROOT\sink\02_azuresql_setup.sql" "Schema and table setup"
